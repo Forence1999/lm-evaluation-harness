@@ -382,7 +382,14 @@ class VLLM(TemplateLM):
             # set the max length in tokens of inputs ("context_enc")
             # max len for inputs = max length, minus room to generate the max new tokens
             max_ctx_len = self.max_length - max_gen_toks
+            if any([True if len(x) > max_ctx_len else False for x in context_encoding]):
+                import warnings
+
+                warnings.warn(
+                    f"Context (Prompt) length exceeds max_ctx_len: {max_ctx_len}"
+                )
             context_encoding = [x[-max_ctx_len:] for x in context_encoding]
+            # context_encoding = [x for x in context_encoding]
 
             # perform batched generation
             cont = self._model_generate(
