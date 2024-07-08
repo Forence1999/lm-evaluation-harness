@@ -400,10 +400,39 @@ class VLLM(TemplateLM):
                 **kwargs,
             )
 
+            def convert_logprobs_to_list(logprobs):  # FORENCE
+                import math
+
+                res = []
+                for token_probs in logprobs:
+                    token_res = []
+                    for token_id, info in token_probs.items():
+                        token_res.append(
+                            (
+                                info.rank,
+                                token_id,
+                                info.decoded_token,
+                                math.exp(info.logprob),
+                            )
+                        )
+                    token_res.sort(key=lambda x: x[0])
+                    res.append(token_res)
+                return res
+
             # cache generations
             for output, context in zip(cont, context):
                 generated_text = output.outputs[0].text
-                res.append(generated_text)
+                # res.append(generated_text)
+                log_probs = getattr(output.outputs[0], "logprobs", None)
+                if log_probs is not None:
+                    log_probs = convert_logprobs_to_list(log_probs)
+                prompt_logprobs = getattr(output, "prompt_logprobs", None)  # FORENCE
+                if prompt_logprobs is not None:
+                    prompt_logprobs = convert_logprobs_to_list(
+                        prompt_logprobs[1:]
+                    )  # rm the first one, which is None
+                res.append((generated_text, log_probs, prompt_logprobs))
+
                 self.cache_hook.add_partial(
                     "generate_until", (context, gen_kwargs), generated_text
                 )
@@ -498,12 +527,12 @@ class VLLM(TemplateLM):
             return getattr(logprob, "logprob", logprob)
 
         continuation_logprobs_dicts = [
-            {
-                token: coerce_logprob_to_num(logprob)
-                for token, logprob in logprob_dict.items()
-            }
-            if logprob_dict is not None
-            else None
+                {
+                    token: coerce_logprob_to_num(logprob)
+                    for token, logprob in logprob_dict.items()
+                }
+                if logprob_dict is not None
+                else None
             for logprob_dict in continuation_logprobs_dicts
         ]
 
