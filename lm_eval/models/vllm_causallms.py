@@ -17,6 +17,22 @@ from lm_eval.utils import (
     make_disjoint_window,
 )
 
+import torch
+from transformers.generation.logits_process import NoRepeatNGramLogitsProcessor
+
+
+# FORENCE: add NoRepeatNGramLogitsProcessorWrapper
+class NoRepeatNGramLogitsProcessorWrapper:
+    def __init__(self, ngram_size: float):
+        self.warper = NoRepeatNGramLogitsProcessor(ngram_size=ngram_size)
+
+    def __call__(self, token_ids: List[int], logits: torch.tensor) -> torch.tensor:
+        # transformers warpers assume tensors of shape (batch_size, vocab_size)
+        # token_ids needs to be torch.LongTensor of shape (batch_size, vocab_size)
+
+        token_ids = torch.tensor(token_ids, dtype=torch.long).reshape((1, -1))
+        return self.warper(input_ids=token_ids, scores=logits.reshape((1, -1)))
+
 
 try:
     import ray
@@ -232,6 +248,17 @@ class VLLM(TemplateLM):
     ):
         if generate:
             kwargs = self.modify_gen_kwargs(kwargs)
+
+            # FORENCE: add no_repeat_ngram_processor if no_repeat_ngram_size is provided
+            no_repeat_ngram_size = kwargs.pop("no_repeat_ngram_size", None)
+            if no_repeat_ngram_size is not None:
+                no_repeat_ngram_processor = NoRepeatNGramLogitsProcessorWrapper(
+                    ngram_size=no_repeat_ngram_size
+                )
+                logits_processors = kwargs.get("logits_processors", [])
+                logits_processors.append(no_repeat_ngram_processor)
+                kwargs["logits_processors"] = logits_processors
+
             sampling_params = SamplingParams(max_tokens=max_tokens, stop=stop, **kwargs)
         else:
             sampling_params = SamplingParams(
@@ -498,12 +525,14 @@ class VLLM(TemplateLM):
             return getattr(logprob, "logprob", logprob)
 
         continuation_logprobs_dicts = [
-            {
-                token: coerce_logprob_to_num(logprob)
-                for token, logprob in logprob_dict.items()
-            }
-            if logprob_dict is not None
-            else None
+            (
+                {
+                    token: coerce_logprob_to_num(logprob)
+                    for token, logprob in logprob_dict.items()
+                }
+                if logprob_dict is not None
+                else None
+            )
             for logprob_dict in continuation_logprobs_dicts
         ]
 
