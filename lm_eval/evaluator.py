@@ -445,12 +445,19 @@ def evaluate(
             for _ in range(padding_requests[reqtype]):
                 cloned_reqs.extend([req] * req.repeats)
 
+        # FORENCE: only verified for vllm
+        assert isinstance(
+            lm, lm_eval.models.vllm_causallms.VLLM
+        ), "This code snipet is only verified for VLLM model!"
+
         # run requests through model
         resps = getattr(lm, reqtype)(cloned_reqs)
 
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):
-            req.resps.append(x)
+            # req.resps.append(x)
+            # FORENCE: associated with lm_eval.models.vllm_causallms.VLLM.
+            req.resps.extend(x)
 
         if lm.world_size > 1:
             lm.accelerator.wait_for_everyone()

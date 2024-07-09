@@ -434,7 +434,9 @@ class VLLM(TemplateLM):
 
             # cache generations
             for output, context in zip(cont, context):
-                generated_text = output.outputs[0].text
+                # generated_text = output.outputs[0].text
+                # FORENCE: associated with lm_eval.evaluator.evaluate
+                generated_text = [i.text for i in output.outputs]
                 res.append(generated_text)
                 self.cache_hook.add_partial(
                     "generate_until", (context, gen_kwargs), generated_text
