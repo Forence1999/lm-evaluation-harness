@@ -26,12 +26,17 @@ class NoRepeatNGramLogitsProcessorWrapper:
     def __init__(self, ngram_size: float):
         self.warper = NoRepeatNGramLogitsProcessor(ngram_size=ngram_size)
 
-    def __call__(self, token_ids: List[int], logits: torch.tensor) -> torch.tensor:
+    def __call__(
+        self, prompt_ids: List[int], token_ids: List[int], logits: torch.tensor
+    ) -> torch.tensor:
         # transformers warpers assume tensors of shape (batch_size, vocab_size)
         # token_ids needs to be torch.LongTensor of shape (batch_size, vocab_size)
 
-        token_ids = torch.tensor(token_ids, dtype=torch.long).reshape((1, -1))
-        return self.warper(input_ids=token_ids, scores=logits.reshape((1, -1)))
+        context_ids = torch.tensor(prompt_ids + token_ids, dtype=torch.long)
+
+        return self.warper(
+            input_ids=context_ids.reshape((1, -1)), scores=logits.reshape((1, -1))
+        )
 
 
 try:
