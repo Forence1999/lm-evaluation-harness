@@ -203,6 +203,12 @@ def setup_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--task_kwargs",
+        type=str,
+        default=None,
+        help=("String arguments for task."),
+    )
+    parser.add_argument(
         "--verbosity",
         "-v",
         type=str.upper,
@@ -390,6 +396,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
         apply_chat_template=args.apply_chat_template,
         fewshot_as_multiturn=args.fewshot_as_multiturn,
         gen_kwargs=args.gen_kwargs,
+        task_kwargs=args.task_kwargs,
         task_manager=task_manager,
         verbosity=args.verbosity,
         predict_only=args.predict_only,
@@ -438,7 +445,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
             evaluation_tracker.recreate_metadata_card()
 
         print(
-            f"{args.model} ({args.model_args}), gen_kwargs: ({args.gen_kwargs}), limit: {args.limit}, num_fewshot: {args.num_fewshot}, "
+            f"{args.model} ({args.model_args}), gen_kwargs: ({args.gen_kwargs}),  task_kwargs: ({args.task_kwargs}), limit: {args.limit}, num_fewshot: {args.num_fewshot}, "
             f"batch_size: {args.batch_size}{f' ({batch_sizes})' if batch_sizes else ''}"
         )
         print(make_table(results))

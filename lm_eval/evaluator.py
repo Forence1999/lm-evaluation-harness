@@ -68,6 +68,7 @@ def simple_evaluate(
     numpy_random_seed: int = 1234,
     torch_random_seed: int = 1234,
     fewshot_random_seed: int = 1234,
+    task_kwargs: Optional[str] = None,
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
@@ -123,6 +124,8 @@ def simple_evaluate(
         Random seed for torch. If set to None, the seed will not be set.
     :param fewshot_random_seed: int
         Random seed for fewshot sampler random generator. If set to None, the seed of generator will be set to None.
+    :param task_kwargs: str
+        String arguments for task
 
     :return
         Dictionary of results
@@ -167,6 +170,14 @@ def simple_evaluate(
         if gen_kwargs == "":
             gen_kwargs = None
 
+    if task_kwargs is not None:
+        task_kwargs = simple_parse_args_string(task_kwargs)
+        eval_logger.warning(
+            "task_kwargs specified through cli, these settings will update set parameters in yaml tasks."
+        )
+        if task_kwargs == "":
+            task_kwargs = None
+
     if isinstance(model, str):
         if model_args is None:
             eval_logger.warning("model_args not specified. Using defaults.")
@@ -210,9 +221,7 @@ def simple_evaluate(
             use_cache
             # each rank receives a different cache db.
             # necessary to avoid multiple writes to cache at once
-            + "_rank"
-            + str(lm.rank)
-            + ".db",
+            + "_rank" + str(lm.rank) + ".db",
         )
 
     if task_manager is None:
@@ -231,6 +240,10 @@ def simple_evaluate(
                 task_obj.set_config(
                     key="generation_kwargs", value=gen_kwargs, update=True
                 )
+
+        if task_kwargs is not None:
+            for k, v in task_kwargs.items():
+                task_obj.set_config(key=k, value=v, update=isinstance(v, dict))
 
         if predict_only:
             log_samples = True
@@ -321,6 +334,7 @@ def simple_evaluate(
                 "numpy_seed": numpy_random_seed,
                 "torch_seed": torch_random_seed,
                 "fewshot_seed": fewshot_random_seed,
+                **task_kwargs,
             }
         )
         results["git_hash"] = get_git_commit_hash()
@@ -399,12 +413,12 @@ def evaluate(
             system_instruction=system_instruction,
             apply_chat_template=apply_chat_template,
             fewshot_as_multiturn=fewshot_as_multiturn,
-            chat_template=getattr(lm, "apply_chat_template")
-            if apply_chat_template
-            else None,
-            tokenizer_name=getattr(lm, "tokenizer_name", "")
-            if apply_chat_template
-            else "",
+            chat_template=(
+                getattr(lm, "apply_chat_template") if apply_chat_template else None
+            ),
+            tokenizer_name=(
+                getattr(lm, "tokenizer_name", "") if apply_chat_template else ""
+            ),
         )
         eval_logger.debug(
             f"Task: {task_output.task_name}; number of requests on this rank: {len(task.instances)}"
