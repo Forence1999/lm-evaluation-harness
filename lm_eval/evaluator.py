@@ -334,7 +334,7 @@ def simple_evaluate(
                 "numpy_seed": numpy_random_seed,
                 "torch_seed": torch_random_seed,
                 "fewshot_seed": fewshot_random_seed,
-                **task_kwargs,
+                **(task_kwargs if task_kwargs is not None else {}),
             }
         )
         results["git_hash"] = get_git_commit_hash()
