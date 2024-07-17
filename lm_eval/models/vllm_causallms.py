@@ -256,7 +256,7 @@ class VLLM(TemplateLM):
 
             # FORENCE: add no_repeat_ngram_processor if no_repeat_ngram_size is provided
             no_repeat_ngram_size = kwargs.pop("no_repeat_ngram_size", None)
-            if no_repeat_ngram_size is not None:
+            if (no_repeat_ngram_size is not None) and (no_repeat_ngram_size > 0):
                 no_repeat_ngram_processor = NoRepeatNGramLogitsProcessorWrapper(
                     ngram_size=no_repeat_ngram_size
                 )
