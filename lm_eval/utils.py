@@ -107,7 +107,9 @@ def simple_parse_args_string(args_string):
     #     k: handle_arg_string(v) for k, v in [arg.split("=") for arg in arg_list]
     # }
     args_dict = {}
+    print("")
     for arg in arg_list:
+        print(arg)
         k, v = arg.split("=")
         if "." in k:
             nested_keys = k.split(".")
@@ -117,6 +119,7 @@ def simple_parse_args_string(args_string):
             nested_dict[nested_keys[-1]] = handle_arg_string(v)
         else:
             args_dict[k] = handle_arg_string(v)
+    print("")
 
     return args_dict
 
