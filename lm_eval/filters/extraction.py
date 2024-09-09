@@ -1,6 +1,7 @@
 import re
 import sys
 import unicodedata
+import pandas as pd
 
 from lm_eval.api.filter import Filter
 from lm_eval.api.registry import register_filter
@@ -44,11 +45,21 @@ class RegexFilter(Filter):
                 filtered.append(match)
             return filtered
 
-        # print(resps)
         filtered_resps = list(map(lambda x: filter_set(x), resps))
-        # print(filtered_resps)
-
+        save = 0
+        if save:
+            # Rachel Begin
+            x = [list(filtered_resps[i]) for i in range(len(filtered_resps))]
+            beam_width = 8
+            if len(x[0]) == beam_width:
+                #print("x ", x)
+                generated_answers = pd.DataFrame(x, dtype="string")
+                #print("generated_answers: ", generated_answers)
+                generated_answers.to_csv('/workspace/temp/extract_answers_consis.csv', index=False, header=None)
+            # Rachel End
+        
         return filtered_resps
+        # filtered_resps [num_questions, beam_width]提取出来的答案，字符串
 
 
 @register_filter("remove_whitespace")

@@ -433,8 +433,11 @@ class VLLM(TemplateLM):
             )
 
             # cache generations
-            for output, context in zip(cont, context):
-                # generated_text = output.outputs[0].text
+            for output, context in zip(cont, context):  
+                # 应该是一道题一个循环，len(cont) = 题目数
+                # output是模型输出的beam_width个answers
+                # context是上下文（若干COT例子 + 一个question）
+
                 # FORENCE: associated with lm_eval.evaluator.evaluate
                 generated_text = [i.text for i in output.outputs]
                 res.append(generated_text)
@@ -444,6 +447,8 @@ class VLLM(TemplateLM):
                 pbar.update(1)
 
         pbar.close()
+        #import pandas as pd
+        #pd.DataFrame(re_ords._reorder_indices).to_csv('/workspace/temp/reorder.csv',header=None,index=False)
         # reorder all group of results back to original unsorted form
         return re_ords.get_original(res)
 

@@ -5,6 +5,8 @@ import os
 import sys
 from functools import partial
 from typing import Union
+import pandas as pd
+import numpy as np
 
 from lm_eval import evaluator, utils
 from lm_eval.evaluator import request_caching_arg_to_dict
@@ -333,7 +335,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
             import glob
 
             task_names = []
-            yaml_path = os.path.join(args.tasks, "*.yaml")
+            yaml_path = os.path.join(args.tasks, "*.yaml")  # where is 'forence'?
             for yaml_file in glob.glob(yaml_path):
                 config = utils.load_yaml_config(yaml_file)
                 task_names.append(config)
@@ -457,5 +459,32 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
             wandb_logger.run.finish()
 
 
+import math
+
 if __name__ == "__main__":
+
+    ## scheduler.py
+    # file_logprobs = '/workspace/temp/logprobs.csv'      # logprobs
+    # file_maxlen = '/workspace/temp/maxlen.csv'          # maxlen
+    # file_output_text = '/workspace/temp/output_text.csv'                # output token
+
+    ## extraction.py
+    # file_generated_answers = '/workspace/temp/generated_answers.csv'    # 提取结果
+
+    ## evaluator.py
+    # file_Q_A = '/workspace/temp/Q_A.csv'                                # request、提取结果是否正确
+
+    # with open(file_logprobs, 'w') as file:
+    #    file.truncate(0)
+    # with open(file_maxlen, 'w') as file:
+    #    file.truncate(0)
+    # with open(file_generated_answers, 'w') as file:
+    #    file.truncate(0)
+    # with open(file_Q_A, 'w') as file:
+    #    file.truncate(0)
+    # with open(file_output_text, 'w') as file:
+    #    file.truncate(0)
+
+    # print("Have Cleard all Files")
+
     cli_evaluate()

@@ -440,7 +440,7 @@ def get_task_dict(
     if len(string_task_name_list) > 0:
         if task_manager is None:
             task_manager = TaskManager()
-
+        # 从yaml文件加载task的设置
         task_name_from_string_dict = task_manager.load_task_or_group(
             string_task_name_list
         )

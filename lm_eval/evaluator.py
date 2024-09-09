@@ -394,6 +394,7 @@ def evaluate(
     padding_requests = defaultdict(int)
 
     # get lists of group hierarchy and each type of request
+    # yaml的配置存在eval_tasks里面
     task_hierarchy, eval_tasks = get_task_list(task_dict)
     if not log_samples:
         if not all(
@@ -404,6 +405,7 @@ def evaluate(
     for task_output in eval_tasks:
         task: Task = task_output.task
         limit = get_sample_size(task, limit)
+        # 建立所有的prompt
         task.build_all_requests(
             limit=limit,
             rank=lm.rank,
@@ -426,6 +428,7 @@ def evaluate(
         if write_out:
             print_writeout(task)
         # aggregate Instances by LM method requested to get output.
+        # 每个instance都是一个prompt
         for instance in task.instances:
             reqtype = instance.request_type
             requests[reqtype].append(instance)
@@ -465,8 +468,10 @@ def evaluate(
         ), "This code snipet is only verified for VLLM model!"
 
         # run requests through model
+        # resps模型生成的答案，每个题是连着的的
+        # (问题数, beam_width) 或者 (问题数*repeats)
         resps = getattr(lm, reqtype)(cloned_reqs)
-
+        print("resps")
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):
             # req.resps.append(x)
@@ -482,6 +487,7 @@ def evaluate(
     # TODO: del model here, maybe (idea: allow user to specify device of e.g. reward model separately)
     for task_output in eval_tasks:
         task = task_output.task
+        # apply filters to responses, get maj@all...
         task.apply_filters()
 
         ### Collect values of metrics on all datapoints ###
@@ -490,12 +496,21 @@ def evaluate(
         # Pre-process task.instances to group by doc_id
         instances_by_doc_id = defaultdict(list)
         for instance in task.instances:
+            # instance是题目的class，在476行写入了模型生成的resps
             instances_by_doc_id[instance.doc_id].append(instance)
         # Sort instances within each group
         for instances in instances_by_doc_id.values():
             instances.sort(key=lambda x: x.idx)
+
+        # Rachel Begin
+        # golds = []
+        # q_list = []
+        # filter_ith = 0
+        # Rechel End
+
         # iterate over different filters used
         for filter_key in task.instances[0].filtered_resps.keys():
+            # 8 kinds of filter
             doc_iterator = task.doc_iterator(
                 rank=RANK, limit=limit, world_size=WORLD_SIZE
             )
@@ -530,6 +545,28 @@ def evaluate(
                     task_output.logged_samples.append(example)
                 for metric, value in metrics.items():
                     task_output.sample_metrics[(metric, filter_key)].append(value)
+                # 3 questions
+                # if filter_ith == 0:
+                #    gold = task.doc_to_target(doc)
+                #    if type(gold) != 'string':
+                #        gold = str(gold)
+                #    golds.append(gold)
+
+            # filter_ith += 1
+
+        # save = 0
+        # if save:
+        #    # Rachel Begin
+        #    import pandas as pd
+        #    gen = pd.read_csv("/workspace/temp/generated_answers.csv", header=None, index_col=False, dtype='string').values.tolist()
+
+        #    for i in range(len(golds)):
+        #        for j in range(len(gen[i])):
+        #            row = {'result':gen[i][j] == golds[i]}
+        #            pd.DataFrame([row]).to_csv('/workspace/temp/Q_A.csv',mode='a', index=False, header=None)
+
+        #    print("Comparison Finished")
+        # Rachel End
 
     if WORLD_SIZE > 1:
         # if multigpu, then gather data across all ranks to rank 0
@@ -567,14 +604,7 @@ def evaluate(
         # aggregate results ; run bootstrap CIs
         for task_output in eval_tasks:
             task_output.calculate_aggregate_metric(bootstrap_iters=bootstrap_iters)
-        (
-            results,
-            samples,
-            configs,
-            versions,
-            num_fewshot,
-            higher_is_better,
-        ) = consolidate_results(eval_tasks)
+        (results, samples, configs, versions, num_fewshot,higher_is_better) = consolidate_results(eval_tasks)
 
         ### Calculate group metrics ###
         if bool(results):

@@ -23,6 +23,7 @@ from typing import (
 import datasets
 import numpy as np
 from tqdm import tqdm
+import pandas as pd
 
 from lm_eval import utils
 from lm_eval.api import samplers
@@ -604,7 +605,12 @@ class Task(abc.ABC):
         """Iterates over FilterEnsembles and applies them to instances"""
         if hasattr(self, "_filters"):
             for f in self._filters:
+                # self._instances 是Tasks类的list，每个问题一个实例，
+                # [0].doc['question] 测试的问题
+                # .doc['answer']    测试的答案
+                # .resps            模型给出的beam_width个文本答案
                 f.apply(self._instances)
+                print(" ", end="")
         else:
             eval_logger.warning("No filter defined, passing through instances")
             return self._instances

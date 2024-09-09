@@ -62,6 +62,7 @@ class MajorityVoteFilter(Filter):
         """
 
         def select_majority(resp):
+            # 选出现最多的答案
             counts = Counter(resp)
             vote = counts.most_common(1)[0][0]
             return vote
