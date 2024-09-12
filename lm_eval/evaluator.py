@@ -488,6 +488,7 @@ def evaluate(
     for task_output in eval_tasks:
         task = task_output.task
         # apply filters to responses, get maj@all...
+        task.process_output()
         task.apply_filters()
 
         ### Collect values of metrics on all datapoints ###
@@ -516,9 +517,7 @@ def evaluate(
             )
             for doc_id, doc in doc_iterator:
                 requests = instances_by_doc_id[doc_id]
-                metrics = task.process_results(
-                    doc, [req.filtered_resps[filter_key] for req in requests]
-                )
+                metrics = task.process_results(doc, [req.filtered_resps[filter_key] for req in requests])
                 if log_samples:
                     target = task.doc_to_target(doc)
                     example = {

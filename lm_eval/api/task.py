@@ -1517,6 +1517,11 @@ class ConfigurableTask(Task):
 
         return result_dict
 
+    def process_outputs(self):
+        if callable(self.config.process_outputs):
+            self.instance = self.self.config.process_outputs(self.instances)
+
+
     def aggregation(self) -> dict:
         return self._aggregation_list
 
