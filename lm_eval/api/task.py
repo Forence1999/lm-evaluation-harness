@@ -78,6 +78,7 @@ class TaskConfig(dict):
     doc_to_target: Optional[Union[Callable, str]] = None
     doc_to_choice: Optional[Union[Callable, str, dict, list]] = None
     process_results: Optional[Union[Callable, str]] = None
+    process_outputs: Optional[Union[Callable, str]] = None
     use_prompt: Optional[str] = None
     description: str = ""
     target_delimiter: str = " "
@@ -1519,7 +1520,10 @@ class ConfigurableTask(Task):
 
     def process_outputs(self):
         if callable(self.config.process_outputs):
-            self.instance = self.self.config.process_outputs(self.instances)
+            for i in range(len(self.instances)):
+                self.config.process_outputs(self.instances[i].resps)
+        else:
+            raise Exception('process_outputs is not defined in utils.')
 
 
     def aggregation(self) -> dict:
