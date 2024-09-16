@@ -1504,7 +1504,9 @@ class ConfigurableTask(Task):
                             predictions=[result],
                             **self._metric_fn_kwargs[metric],
                         )
-                    except TypeError:  # needed for now in order to use a different interface between our own metrics and HF Evaluate metrics
+                    except (
+                        TypeError
+                    ):  # needed for now in order to use a different interface between our own metrics and HF Evaluate metrics
                         result_score = self._metric_fn_list[metric]([gold, result])
                     if isinstance(result_score, dict):
                         # TODO: this handles the case where HF evaluate returns a dict.
@@ -1523,8 +1525,7 @@ class ConfigurableTask(Task):
             for i in range(len(self.instances)):
                 self.config.process_outputs(self.instances[i].resps)
         else:
-            raise Exception('process_outputs is not defined in utils.')
-
+            raise ValueError("process_outputs is not defined in utils.")
 
     def aggregation(self) -> dict:
         return self._aggregation_list

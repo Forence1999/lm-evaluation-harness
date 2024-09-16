@@ -25,9 +25,7 @@ class TaskManager:
         self.logger = utils.eval_logger
         self.logger.setLevel(getattr(logging, f"{verbosity}"))
 
-        self._task_index = self.initialize_tasks(
-            include_path=include_path, include_defaults=include_defaults
-        )
+        self._task_index = self.initialize_tasks(include_path=include_path, include_defaults=include_defaults)
         self._all_tasks = sorted(list(self._task_index.keys()))
 
         self.task_group_map = collections.defaultdict(list)
@@ -451,12 +449,14 @@ def get_task_dict(
                 **task_name_from_config_dict,
                 **task_manager.load_config(config=task_element),
             }
+            print("Hi")
 
         elif isinstance(task_element, Task):
             task_name_from_object_dict = {
                 **task_name_from_object_dict,
                 get_task_name_from_object(task_element): task_element,
             }
+            print("Hello")
 
     if not set(task_name_from_string_dict.keys()).isdisjoint(
         set(task_name_from_object_dict.keys())
