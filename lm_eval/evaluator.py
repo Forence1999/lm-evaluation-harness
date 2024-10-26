@@ -488,7 +488,7 @@ def evaluate(
     for task_output in eval_tasks:
         task = task_output.task
         # apply filters to responses, get maj@all...
-        task.process_outputs()
+        #task.process_outputs()
         task.apply_filters()
 
         ### Collect values of metrics on all datapoints ###
