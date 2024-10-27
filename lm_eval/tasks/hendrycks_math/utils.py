@@ -56,17 +56,24 @@ def remove_boxed(s):
     if s == None:
         return None
 
-    if "\\boxed " in s:
+    elif "\\boxed " in s:
         left = "\\boxed "
         assert s[: len(left)] == left
         return s[len(left) :]
+    else:
+        #left = "\\boxed{"
 
-    left = "\\boxed{"
+        #assert s[: len(left)] == left
+        #assert s[-1] == "}"
 
-    assert s[: len(left)] == left
-    assert s[-1] == "}"
+        #return s[len(left) : -1]
+        left = "\\boxed{"
+        if s[: len(left)] != left:
+            print("WRONG: ", s, s[: len(left)])
+        #if s[-1] != "}":
+        #    print("WRONG: ", s)
 
-    return s[len(left) : -1]
+        return s[len(left) : -1]
 
 
 def last_boxed_only_string(string):

@@ -1525,7 +1525,8 @@ class ConfigurableTask(Task):
             for i in range(len(self.instances)):
                 self.config.process_outputs(self.instances[i].resps)
         else:
-            raise ValueError("process_outputs is not defined in utils.")
+            print("process_outputs is not defined in utils.")
+            #raise ValueError("process_outputs is not defined in utils.")
 
     def aggregation(self) -> dict:
         return self._aggregation_list

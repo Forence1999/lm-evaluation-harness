@@ -488,7 +488,8 @@ def evaluate(
     for task_output in eval_tasks:
         task = task_output.task
         # apply filters to responses, get maj@all...
-        #task.process_outputs()
+
+        # task.process_outputs()
         task.apply_filters()
 
         ### Collect values of metrics on all datapoints ###
@@ -511,7 +512,6 @@ def evaluate(
 
         # iterate over different filters used
         for filter_key in task.instances[0].filtered_resps.keys():
-            # 8 kinds of filter
             doc_iterator = task.doc_iterator(
                 rank=RANK, limit=limit, world_size=WORLD_SIZE
             )
@@ -603,7 +603,9 @@ def evaluate(
         # aggregate results ; run bootstrap CIs
         for task_output in eval_tasks:
             task_output.calculate_aggregate_metric(bootstrap_iters=bootstrap_iters)
-        (results, samples, configs, versions, num_fewshot,higher_is_better) = consolidate_results(eval_tasks)
+        (results, samples, configs, versions, num_fewshot, higher_is_better) = (
+            consolidate_results(eval_tasks)
+        )
 
         ### Calculate group metrics ###
         if bool(results):
